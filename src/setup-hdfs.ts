@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import {downloadTool, extractTar, cacheDir} from '@actions/tool-cache';
-import {execSync} from 'child_process';
+import {exec} from 'child_process';
 import * as fs from 'fs';
 import {promisify} from 'util';
 
@@ -62,32 +62,39 @@ async function setup() {
   eval \`ssh-agent\`;
   ssh-add ~/.ssh/id_rsa;
 `;
-  try {
-    let result = execSync(cmd).toString();
-    core.info(result)
-  }catch (e) {
-    core.error('Setup self ssh failed');
-    throw e;
-  }
-
+  exec(cmd, (err: any, stdout: any, stderr: any) => {
+    core.info(stdout);
+    core.warning(stderr);
+    if (err) {
+      core.error('Setup self ssh failed');
+      throw new Error(err);
+    }
+  });
 
   // Start hdfs daemon.
-  try {
-    let result = execSync(`${hdfsHome}/bin/hdfs namenode -format`).toString();
-    core.info(result)
-  }catch (e) {
-    core.error('Format hdfs namenode failed');
-    throw e;
-  }
+  exec(
+    `${hdfsHome}/bin/hdfs namenode -format`,
+    (err: any, stdout: any, stderr: any) => {
+      core.info(stdout);
+      core.warning(stderr);
+      if (err) {
+        core.error('Format hdfs namenode failed');
+        throw new Error(err);
+      }
+    }
+  );
 
-
-  try {
-    let result = execSync(`${hdfsHome}/sbin/start-dfs.sh`).toString();
-    core.info(result)
-  }catch (e) {
-    core.error('Format hdfs namenode failed');
-    throw e;
-  }
+  exec(
+    `${hdfsHome}/sbin/start-dfs.sh`,
+    (err: any, stdout: any, stderr: any) => {
+      core.info(stdout);
+      core.warning(stderr);
+      if (err) {
+        core.error('Call start-dfs failed');
+        throw new Error(err);
+      }
+    }
+  );
 
   core.addPath(`${hdfsHome}/bin`);
   core.exportVariable('HDFS_NAMENODE_ADDR', '127.0.0.1:9000');
