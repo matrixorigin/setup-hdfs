@@ -1,10 +1,12 @@
 import * as core from '@actions/core';
 import {downloadTool, extractTar, cacheDir} from '@actions/tool-cache';
-import {exec} from 'child_process';
+import util from 'node:util';
+import child_process from 'node:child_process';
 import * as fs from 'fs';
 import {promisify} from 'util';
 
 const writeFile = promisify(fs.writeFile);
+const exec = util.promisify(child_process.exec);
 
 async function setup() {
   // Fetch user input.
@@ -51,7 +53,6 @@ async function setup() {
   // Setup self ssh connection.
   // Fix permission issues: https://github.community/t/ssh-test-using-github-action/166717/12
   const cmd = `set -ex;
-  sleep 10;
   chmod g-w $HOME;
   chmod o-w $HOME;
   ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa;
@@ -62,39 +63,22 @@ async function setup() {
   eval \`ssh-agent\`;
   ssh-add ~/.ssh/id_rsa;
 `;
-  exec(cmd, (err: any, stdout: any, stderr: any) => {
-    core.info(stdout);
-    core.warning(stderr);
-    if (err) {
-      core.error('Setup self ssh failed');
-      throw new Error(err);
-    }
-  });
+  let result = await exec(cmd);
+  core.info(result.stdout)
+  core.warning(result.stderr)
+
+  core.info('Setup self ssh success');
 
   // Start hdfs daemon.
-  exec(
-    `${hdfsHome}/bin/hdfs namenode -format`,
-    (err: any, stdout: any, stderr: any) => {
-      core.info(stdout);
-      core.warning(stderr);
-      if (err) {
-        core.error('Format hdfs namenode failed');
-        throw new Error(err);
-      }
-    }
-  );
+  result = await exec(`${hdfsHome}/bin/hdfs namenode -format`);
+  core.info(result.stdout)
+  core.warning(result.stderr)
+  core.info('Format hdfs namenode success');
 
-  exec(
-    `${hdfsHome}/sbin/start-dfs.sh`,
-    (err: any, stdout: any, stderr: any) => {
-      core.info(stdout);
-      core.warning(stderr);
-      if (err) {
-        core.error('Call start-dfs failed');
-        throw new Error(err);
-      }
-    }
-  );
+  result = await exec(`${hdfsHome}/sbin/start-dfs.sh`);
+  core.info(result.stdout)
+  core.warning(result.stderr)
+  core.info('Start hdfs success');
 
   core.addPath(`${hdfsHome}/bin`);
   core.exportVariable('HDFS_NAMENODE_ADDR', '127.0.0.1:9000');
