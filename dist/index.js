@@ -48,11 +48,10 @@ const writeFile = (0, util_1.promisify)(fs.writeFile);
 function setup() {
     return __awaiter(this, void 0, void 0, function* () {
         // Fetch user input.
-        const hdfsVersion = core.getInput('hdfs-version');
-        const hdfsUrl = `https://dlcdn.apache.org/hadoop/common/hadoop-${hdfsVersion}/hadoop-${hdfsVersion}.tar.gz`;
+        const hdfsUrl = core.getInput('hdfs-download-url');
         // Download hdfs and extract.
         const hdfsTar = yield (0, tool_cache_1.downloadTool)(hdfsUrl);
-        const hdfsFolder = (yield (0, tool_cache_1.extractTar)(hdfsTar)) + `/hadoop-${hdfsVersion}`;
+        const hdfsFolder = (yield (0, tool_cache_1.extractTar)(hdfsTar)) + `/hadoop-3.4.1`;
         const coreSite = `<configuration>
     <property>
         <name>fs.defaultFS</name>
@@ -83,12 +82,20 @@ function setup() {
     </property>
 </configuration>`;
         yield writeFile(`${hdfsFolder}/etc/hadoop/hdfs-site.xml`, hdfsSite);
-        const hdfsHome = yield (0, tool_cache_1.cacheDir)(hdfsFolder, 'hdfs', hdfsVersion);
+        const hdfsHome = yield (0, tool_cache_1.cacheDir)(hdfsFolder, 'hdfs', '3.4.1');
         // Setup self ssh connection.
         // Fix permission issues: https://github.community/t/ssh-test-using-github-action/166717/12
-        const cmd = `set -ex; chmod g-w $HOME; chmod o-w $HOME; ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa;
-cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys; chmod 0600 ~/.ssh/authorized_keys; ssh-keyscan -H localhost >> ~/.ssh/known_hosts;
-chmod 0600 ~/.ssh/known_hosts; eval \`ssh-agent\`; ssh-add ~/.ssh/id_rsa;
+        const cmd = `set -ex;
+  sleep 10;
+  chmod g-w $HOME;
+  chmod o-w $HOME;
+  ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa;
+  cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys;
+  chmod 0600 ~/.ssh/authorized_keys;
+  ssh-keyscan -H localhost >> ~/.ssh/known_hosts;
+  chmod 0600 ~/.ssh/known_hosts;
+  eval \`ssh-agent\`;
+  ssh-add ~/.ssh/id_rsa;
 `;
         (0, child_process_1.exec)(cmd, (err, stdout, stderr) => {
             core.info(stdout);

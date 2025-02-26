@@ -3,9 +3,10 @@ name: 'Setup Apache HDFS'
 description: 'Set up Apache Hadoop/HDFS and add the command-line tools to the PATH.'
 author: 'beyondstorage'
 inputs:
-  hdfs-version:
+  hdfs-download-url:
     description: "The installed Apache Hadoop version."
     required: true
+    default: "https://dlcdn.apache.org/hadoop/common/hadoop-3.4.1/hadoop-3.4.1.tar.gz"
 runs:
   using: 'node16'
   main: 'dist/index.js'
