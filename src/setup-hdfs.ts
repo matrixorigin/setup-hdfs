@@ -64,20 +64,20 @@ async function setup() {
   ssh-add ~/.ssh/id_rsa;
 `;
   let result = await exec(cmd);
-  core.info(result.stdout)
-  core.warning(result.stderr)
+  core.info(result.stdout);
+  core.warning(result.stderr);
 
   core.info('Setup self ssh success');
 
   // Start hdfs daemon.
   result = await exec(`${hdfsHome}/bin/hdfs namenode -format`);
-  core.info(result.stdout)
-  core.warning(result.stderr)
+  core.info(result.stdout);
+  core.warning(result.stderr);
   core.info('Format hdfs namenode success');
 
   result = await exec(`${hdfsHome}/sbin/start-dfs.sh`);
-  core.info(result.stdout)
-  core.warning(result.stderr)
+  core.info(result.stdout);
+  core.warning(result.stderr);
   core.info('Start hdfs success');
 
   core.addPath(`${hdfsHome}/bin`);

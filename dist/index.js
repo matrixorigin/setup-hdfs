@@ -38,13 +38,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(484));
 const tool_cache_1 = __nccwpck_require__(472);
-const child_process_1 = __nccwpck_require__(317);
+const node_util_1 = __importDefault(__nccwpck_require__(975));
+const node_child_process_1 = __importDefault(__nccwpck_require__(421));
 const fs = __importStar(__nccwpck_require__(896));
 const util_1 = __nccwpck_require__(23);
 const writeFile = (0, util_1.promisify)(fs.writeFile);
+const exec = node_util_1.default.promisify(node_child_process_1.default.exec);
 function setup() {
     return __awaiter(this, void 0, void 0, function* () {
         // Fetch user input.
@@ -86,7 +91,6 @@ function setup() {
         // Setup self ssh connection.
         // Fix permission issues: https://github.community/t/ssh-test-using-github-action/166717/12
         const cmd = `set -ex;
-  sleep 10;
   chmod g-w $HOME;
   chmod o-w $HOME;
   ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa;
@@ -97,31 +101,19 @@ function setup() {
   eval \`ssh-agent\`;
   ssh-add ~/.ssh/id_rsa;
 `;
-        (0, child_process_1.exec)(cmd, (err, stdout, stderr) => {
-            core.info(stdout);
-            core.warning(stderr);
-            if (err) {
-                core.error('Setup self ssh failed');
-                throw new Error(err);
-            }
-        });
+        let result = yield exec(cmd);
+        core.info(result.stdout);
+        core.warning(result.stderr);
+        core.info('Setup self ssh success');
         // Start hdfs daemon.
-        (0, child_process_1.exec)(`${hdfsHome}/bin/hdfs namenode -format`, (err, stdout, stderr) => {
-            core.info(stdout);
-            core.warning(stderr);
-            if (err) {
-                core.error('Format hdfs namenode failed');
-                throw new Error(err);
-            }
-        });
-        (0, child_process_1.exec)(`${hdfsHome}/sbin/start-dfs.sh`, (err, stdout, stderr) => {
-            core.info(stdout);
-            core.warning(stderr);
-            if (err) {
-                core.error('Call start-dfs failed');
-                throw new Error(err);
-            }
-        });
+        result = yield exec(`${hdfsHome}/bin/hdfs namenode -format`);
+        core.info(result.stdout);
+        core.warning(result.stderr);
+        core.info('Format hdfs namenode success');
+        result = yield exec(`${hdfsHome}/sbin/start-dfs.sh`);
+        core.info(result.stdout);
+        core.warning(result.stderr);
+        core.info('Start hdfs success');
         core.addPath(`${hdfsHome}/bin`);
         core.exportVariable('HDFS_NAMENODE_ADDR', '127.0.0.1:9000');
         core.exportVariable('HDFS_NAMENODE_HTTP_ADDR', '127.0.0.1:9870');
@@ -6901,6 +6893,22 @@ module.exports = require("https");
 
 "use strict";
 module.exports = require("net");
+
+/***/ }),
+
+/***/ 421:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:child_process");
+
+/***/ }),
+
+/***/ 975:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:util");
 
 /***/ }),
 
