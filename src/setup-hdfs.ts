@@ -90,7 +90,7 @@ async function setup() {
   core.addPath(`${hdfsHome}/bin`);
   core.exportVariable(
     'HDFS_NAMENODE_ADDR',
-    'hadoop-namenode.hadoop.svc.cluster.local:9000'
+    'hadoop-namenode.hadoop.svc.cluster.local:9820'
   );
   core.exportVariable('HDFS_NAMENODE_HTTP_ADDR', '127.0.0.1:9870');
   core.exportVariable('HADOOP_HOME', hdfsHome);

@@ -119,7 +119,7 @@ function setup() {
         core.warning(result.stderr);
         core.info('Set hdfs name node domain success');
         core.addPath(`${hdfsHome}/bin`);
-        core.exportVariable('HDFS_NAMENODE_ADDR', 'hadoop-namenode.hadoop.svc.cluster.local:9000');
+        core.exportVariable('HDFS_NAMENODE_ADDR', 'hadoop-namenode.hadoop.svc.cluster.local:9820');
         core.exportVariable('HDFS_NAMENODE_HTTP_ADDR', '127.0.0.1:9870');
         core.exportVariable('HADOOP_HOME', hdfsHome);
     });
