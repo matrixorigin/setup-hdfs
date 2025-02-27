@@ -19,7 +19,7 @@ async function setup() {
   const coreSite = `<configuration>
     <property>
         <name>fs.defaultFS</name>
-        <value>hdfs://localhost:9000</value>
+        <value>hdfs://localhost:9820</value>
     </property>
     <property>
         <name>hadoop.http.staticuser.user</name>
@@ -80,8 +80,18 @@ async function setup() {
   core.warning(result.stderr);
   core.info('Start hdfs success');
 
+  result = await exec(
+    `sudo bash -c 'echo "127.0.0.1  hadoop-namenode.hadoop.svc.cluster.local" >> /etc/hosts;'`
+  );
+  core.info(result.stdout);
+  core.warning(result.stderr);
+  core.info('Set hdfs name node domain success');
+
   core.addPath(`${hdfsHome}/bin`);
-  core.exportVariable('HDFS_NAMENODE_ADDR', '127.0.0.1:9000');
+  core.exportVariable(
+    'HDFS_NAMENODE_ADDR',
+    'hadoop-namenode.hadoop.svc.cluster.local:9000'
+  );
   core.exportVariable('HDFS_NAMENODE_HTTP_ADDR', '127.0.0.1:9870');
   core.exportVariable('HADOOP_HOME', hdfsHome);
 }
